@@ -1,13 +1,9 @@
 package com.eptd.dminer.processor;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -23,15 +19,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 public class DataPoster {	
 	private static final DataPoster instance = new DataPoster();
 	
-	private static final String DEFAULTURL = "http://qiaozhang.me:7070/dsaver";
+	private static final String DEFAULTURL = "http://qiaozhang.me:7070";
 	private static final Header JSONTYPE = new BasicHeader("Content-type", "application/json");
 	
-	public synchronized JsonElement post(String url,MajorRepository repo,Integer failed) throws JsonSyntaxException, UnsupportedOperationException, ClientProtocolException, IOException{
+	public synchronized JsonElement post(String url,MajorRepository repo,Integer failed){
 		//initialization
 		JsonObject jsonFailed = new JsonObject();
 		jsonFailed.addProperty("success", false);
@@ -48,6 +43,10 @@ public class DataPoster {
 			request.addHeader(new BasicHeader("Failed-repo",failed.toString()));
 			request.setEntity(new StringEntity(repoJson));	
 			JsonElement jsonElement = new JsonParser().parse(IOUtils.toString(httpClient.execute(request).getEntity().getContent(),"UTF-8"));
+			if(!jsonElement.getAsJsonObject().get("success").getAsBoolean()){				
+				jsonFailed.add("error_msg", jsonElement.getAsJsonObject().get("error_msg").getAsJsonArray());
+				jsonElement = null;
+			}
 			return Optional.ofNullable(jsonElement).orElse(jsonFailed);	
 		} catch (Exception e) {
 			return jsonFailed;
@@ -65,10 +64,16 @@ public class DataPoster {
 			HttpPost request= new HttpPost(Optional.ofNullable(url).orElse(DEFAULTURL)+"/TaskDistributor");
 			request.addHeader(JSONTYPE);
 			request.addHeader(new BasicHeader("Failed-repo",failed.toString()));
-			request.setEntity(new StringEntity(clientJson));	
-			BufferedReader reader = new BufferedReader(new InputStreamReader(httpClient.execute(request).getEntity().getContent()));
-			//convert to task class
-			return gson.fromJson(reader, Task.class);	
+			request.setEntity(new StringEntity(clientJson));
+			JsonObject response = new JsonParser().parse(IOUtils.toString(httpClient.execute(request).getEntity().getContent(),"UTF-8")).getAsJsonObject();
+			if(response.get("success").getAsBoolean()){
+				if(response.get("generated_id")!=null)
+					System.out.println("Register client success with generated id as "+response.get("generated_id").getAsInt());
+				if(response.get("data")!=null)
+					//convert to task class
+					return gson.fromJson(response.get("data").getAsJsonObject().toString(), Task.class);
+			}
+			return null;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;

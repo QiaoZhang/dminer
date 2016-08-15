@@ -65,7 +65,7 @@ public class Configuration {
 					.setPassword(Optional.ofNullable(prpt.getProperty("dminer.github.password")).orElse("loveon1225"))
 					.setAppClientID(Optional.ofNullable(prpt.getProperty("dminer.github.clientID")).orElse("9f71637a480e74cefcb6"))
 					.setAppClientSecret(Optional.ofNullable(prpt.getProperty("dminer.github.clientSecret")).orElse("12d5cf32314dc8ca76eb13d3f315cfd760988f96")));
-			setDsaverURL(Optional.ofNullable(prpt.getProperty("dminer.dsaver.url")).orElse("http://qiaozhang.me:7070/dsaver/DataSaver"));
+			setDsaverURL(Optional.ofNullable(prpt.getProperty("dminer.dsaver.url")).orElse("http://qiaozhang.me:7070/dsaver"));
 			setSonarURL(Optional.ofNullable(prpt.getProperty("dminer.sonar.url")).orElse("http://localhost:9000"));
 			setSonarUsername(Optional.ofNullable(prpt.getProperty("dminer.sonar.username")).orElse("admin"));
 			setSonarPassword(Optional.ofNullable(prpt.getProperty("dminer.sonar.password")).orElse("admin"));

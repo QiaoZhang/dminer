@@ -1,7 +1,5 @@
 package com.eptd.dminer;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -13,7 +11,6 @@ import com.eptd.dminer.crawler.MajorRepoProcessor;
 import com.eptd.dminer.crawler.SearchQueryGenerator;
 import com.eptd.dminer.processor.DataPoster;
 import com.eptd.dminer.processor.ProjectLogger;
-import com.eptd.dminer.core.Client;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -106,12 +103,8 @@ public class MajorRepoTester {
 					System.out.println("avgDaysIntervalOfPR: " + c.getAvgDaysIntervalOfPR());
 				});
 				//send major repo data to data saver
-				try {
-					JsonElement jsonElement = DataPoster.getInstance().post(config.getDsaverURL(),processor.getRepo(),1);
-					System.out.println(jsonElement.getAsJsonObject().toString());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				JsonElement jsonElement = DataPoster.getInstance().post(config.getDsaverURL(),processor.getRepo(),1);
+				System.out.println(jsonElement.getAsJsonObject().toString());
 			}
 			return true;
 		}).count();
