@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<property name="USER_HOME" value="C:\\EPTD\\logs" />
+	<property name="USER_HOME" value=".\\logs" />
 	<appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
 		<discriminator>
 			<key>projectName</key>

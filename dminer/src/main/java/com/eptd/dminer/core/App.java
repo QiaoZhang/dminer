@@ -18,19 +18,19 @@ public class App {
 
 	public static void main(String[] args) {
 		ProjectLogger mainLogger = new ProjectLogger("https://api.github.com/repos/qiaozhang/dminer",Configuration.getDefaultConfig());
-		Authorization auth = new Authorization(mainLogger).createOAuthToken();
 		try {
 			//eptd-dminer.properties file has to be located at the same level of executable jar file
 			String filePath = "./dminer";		
 			//reading configuration from properties file
 			Configuration config = new Configuration();
 			if(config.load("./eptd-dminer.properties")){			
-				//Initialization				
-				do{
-					AtomicInteger failed = new AtomicInteger(0);
+				//Initialization
+				AtomicInteger failed = new AtomicInteger(0);
+				do{					
 					try {
 						Task task = DataPoster.getTask(config.getDsaverURL(), config.getClient(), failed.get());
-						if(task != null){						
+						if(task != null){
+							Authorization auth = new Authorization(mainLogger).createOAuthToken();
 							//get repos according to assigned task
 							SearchQueryGenerator generator = new SearchQueryGenerator("repo");
 							if(!task.getParaLanguage().equals(""))
@@ -60,13 +60,15 @@ public class App {
 									if(!dsaverResponse.getAsJsonObject().get("success").getAsBoolean()){
 										logger.error("\n\n"+dsaverResponse.toString());
 										failed.incrementAndGet();
+										return mr;
+									}else
 										return null;
-									}
-								}
-								return mr;
+								}else
+									return mr;
 							})
 							.filter(mr -> mr!=null)
 							.count());
+							auth.revokeOAuthToken();
 						}else{
 							//sleep if received task is null
 							System.out.println("No task assigned to client "+config.getClient().getFingerPrint()+", thread gonna sleep for "+SLEEP+" mins.");
@@ -79,10 +81,6 @@ public class App {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			auth.revokeOAuthToken();
-		} finally {
-			auth.revokeOAuthToken();
-		}
-				
+		}		
 	}
 }

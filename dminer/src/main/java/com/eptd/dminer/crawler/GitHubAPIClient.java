@@ -87,7 +87,7 @@ public class GitHubAPIClient {
 				if(Optional.ofNullable(response.getFirstHeader("X-RateLimit-Remaining")).isPresent()
 						&&Integer.valueOf(response.getFirstHeader("X-RateLimit-Remaining").getValue())==0){
 					//make current thread sleep if the rate limit of GitHub API has reached
-					long sleep = Long.valueOf(response.getFirstHeader("X-RateLimit-Reset").getValue())+1-(new DateTime().getMillis()/1000);
+					long sleep = Long.valueOf(response.getFirstHeader("X-RateLimit-Reset").getValue())+2-(new DateTime().getMillis()/1000);
 					System.out.println("Due to the rate limit, thread gonna sleep "+sleep+" seconds.");
 					Thread.sleep(sleep*1000);
 					response = request(url+setParameter()+setPaging(page,maxPerPage));

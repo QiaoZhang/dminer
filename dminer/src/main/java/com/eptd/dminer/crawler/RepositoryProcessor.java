@@ -18,6 +18,7 @@ import com.eptd.dminer.core.Repository;
 import com.eptd.dminer.processor.CMDProcessor;
 import com.eptd.dminer.processor.ProjectLogger;
 import com.eptd.dminer.processor.SonarAnalysisProcessor;
+import com.eptd.dminer.processor.SonarPropertiesWriter;
 import com.eptd.dminer.processor.SonarResultExtractor;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -83,6 +84,8 @@ public class RepositoryProcessor {
 				return false;
 			}
 		} catch (Exception e) {
+			RepositoryProcessor.deleteSonar(SonarPropertiesWriter.getProjectKey(repo.getProjectID(), repo.getProjectName(), repo.getOwnerLogin(), repo.getUserType()));
+			RepositoryProcessor.deleteFolder(filePath);
 			logger.error("Unknown Exception when processing "+repositoryURL,e);
 			return false;
 		}		
