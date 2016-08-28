@@ -1,5 +1,9 @@
 package com.eptd.dminer.processor;
 
+import java.util.ArrayList;
+
+import com.eptd.dminer.core.SonarMetrics;
+
 public class SonarAnalysisProcessor {
 	private ProjectLogger logger;	
 	private String repositoryHTML;
@@ -12,6 +16,8 @@ public class SonarAnalysisProcessor {
 	private String version;
 	
 	private String projectKey;
+	
+	private final String[] sonarMetrics = {"ncloc","sqale_index","sqale_debt_ratio"};
 	
 	/**
 	 * Construct a repository processor for SonarQube analysis with specified release version
@@ -44,7 +50,7 @@ public class SonarAnalysisProcessor {
 	 * (1) clone remote repository to local drive, (2) create properties file for sonar project, and 
 	 * (3) run SonarQube analysis; false if one of three subtasks failed.
 	 */
-	public boolean process(){
+	public ArrayList<SonarMetrics> process(){
 		try {
 			CMDProcessor cmd = new CMDProcessor();
 			//step 1: clone repository
@@ -52,16 +58,19 @@ public class SonarAnalysisProcessor {
 			if(cmd.execute() != 0)
 				throw new Exception("Project "+projectName+" fails to be cloned to local drive");
 			//step 2: write properties file
+			
 			if(!SonarPropertiesWriter.getInstance().write(logger,projectID,projectName,login,userType,language,version,filePath))
 				throw new Exception("Project properties file of "+projectName+" fails to be created");
+			//latch.await();
 			//step 3: run SonarQube analysis
 			if(!SonarRunnerProcessor.getInstance().execute(filePath))
 				throw new Exception("Project "+projectName+" fails to be analyzed by SonarQube");
+			//latch.await();
+			return SonarResultExtractor.getInstance().extract(logger, projectKey, sonarMetrics);
 		} catch (Exception e) {
 			logger.error("Sonar-runner project "+projectName,e);
-			return false;
+			return null;
 		}
-		return true;
 	}
 
 	public String getProjectKey() {

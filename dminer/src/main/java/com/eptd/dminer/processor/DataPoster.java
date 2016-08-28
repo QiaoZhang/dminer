@@ -67,7 +67,6 @@ public class DataPoster {
 			request.setEntity(new StringEntity(clientJson));
 			JsonObject response = new JsonParser().parse(IOUtils.toString(httpClient.execute(request).getEntity().getContent(),"UTF-8")).getAsJsonObject();
 			if(response.get("success").getAsBoolean()){
-				System.out.println(response.toString());
 				if(response.get("generated_id")!=null)
 					System.out.println("Register client success with generated id as "+response.get("generated_id").getAsInt());
 				if(response.get("data")!=null)

@@ -340,6 +340,7 @@ public class User {
 		 */
 		Double[] initDouble = {0.0,0.0,0.0,0.0,0.0};
 		AtomicReferenceArray<Double> totalsDouble = new AtomicReferenceArray<Double>(initDouble);
+		System.out.println("OwnRepos:"+ownRepos.size());
 		this.numOfAnalyzedRepos = Math.toIntExact(ownRepos.parallelStream()
 			.filter(repo -> repo.getSonarMetrics()!=null&&repo.getSonarMetrics().size()>0)
 			.map(repo->{
@@ -359,11 +360,13 @@ public class User {
 					totalsLong.incrementAndGet(6);
 				}				
 				//double variables
-				totalsDouble.accumulateAndGet(2, repo.getSonarMetrics().get(0).getValue(), (m,n)->m+n);//totalMajorLanguageLOC
-				totalsDouble.accumulateAndGet(3, repo.getSonarMetrics().get(1).getValue(), (m,n)->m+n);//totalSqaleIndex
-				totalsDouble.accumulateAndGet(4, repo.getSonarMetrics().get(2).getValue(), (m,n)->m+n);//totalDebtRatio
+				System.out.println(repo.getSonarMetrics("ncloc").getValue());
+				totalsDouble.accumulateAndGet(2, repo.getSonarMetrics("ncloc").getValue(), (m,n)->m+n);//totalMajorLanguageLOC
+				totalsDouble.accumulateAndGet(3, repo.getSonarMetrics("sqale_index").getValue(), (m,n)->m+n);//totalSqaleIndex
+				totalsDouble.accumulateAndGet(4, repo.getSonarMetrics("sqale_debt_ratio").getValue(), (m,n)->m+n);//totalDebtRatio
 				return true;
 			}).count());
+		System.out.println("OwnRepos:"+ownRepos.size());
 		if(this.numOfAnalyzedRepos != 0){
 			//set basic repo info
 			this.setAvgSize((double)totalsLong.get(0)/(double)this.numOfAnalyzedRepos);

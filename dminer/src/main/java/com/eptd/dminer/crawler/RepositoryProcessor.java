@@ -1,11 +1,11 @@
 package com.eptd.dminer.crawler;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -15,11 +15,11 @@ import org.joda.time.Days;
 import com.eptd.dminer.core.Authorization;
 import com.eptd.dminer.core.MajorRepository;
 import com.eptd.dminer.core.Repository;
-import com.eptd.dminer.processor.CMDProcessor;
+import com.eptd.dminer.core.SonarMetrics;
+import com.eptd.dminer.processor.ProjectCleaner;
 import com.eptd.dminer.processor.ProjectLogger;
 import com.eptd.dminer.processor.SonarAnalysisProcessor;
 import com.eptd.dminer.processor.SonarPropertiesWriter;
-import com.eptd.dminer.processor.SonarResultExtractor;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -28,8 +28,7 @@ public class RepositoryProcessor {
 	protected String repositoryURL;
 	protected Authorization auth;
 	protected String filePath;	
-	protected Repository repo;	
-	protected final String[] sonarMetrics = {"ncloc","sqale_index","sqale_debt_ratio"};
+	protected Repository repo;		
 	protected final String[] issueEvents = {"closed","referenced","assigned","labeled","milestoned","locked"};
 	
 	/**
@@ -68,24 +67,23 @@ public class RepositoryProcessor {
 					repo.getRepositoryHTML(),filePath,repo.getProjectID(),
 		    		repo.getProjectName(),repo.getOwnerLogin(),repo.getUserType(),
 		    		repo.getLanguage(),repo.getVersion(),logger);
-				AtomicBoolean sonarAnalysis = new AtomicBoolean(false);
+				AtomicReference<ArrayList<SonarMetrics>> result = new AtomicReference<ArrayList<SonarMetrics>>(null);
 				pool.submit(()->{
-					if(sonarProcessor.process())
-						sonarAnalysis.set(true);					
+					result.set(sonarProcessor.process());					
 				});
 				pool.awaitQuiescence(60, TimeUnit.MINUTES);
-				if(sonarAnalysis.get())
-					repo.setSonarMetrics(SonarResultExtractor.getInstance().extract(logger, sonarProcessor.getProjectKey(), sonarMetrics));
-				RepositoryProcessor.deleteSonar(sonarProcessor.getProjectKey());
-				RepositoryProcessor.deleteFolder(filePath);
-				return sonarAnalysis.get();	
+				if(result.get()!=null)
+					repo.setSonarMetrics(result.get());
+				ProjectCleaner.getInstance().deleteSonar(sonarProcessor.getProjectKey());
+				ProjectCleaner.getInstance().deleteFolder(filePath);
+				return true;	
 			}else{
 				logger.error("Captured data of url "+repositoryURL+" is not valid.");
 				return false;
 			}
 		} catch (Exception e) {
-			RepositoryProcessor.deleteSonar(SonarPropertiesWriter.getProjectKey(repo.getProjectID(), repo.getProjectName(), repo.getOwnerLogin(), repo.getUserType()));
-			RepositoryProcessor.deleteFolder(filePath);
+			ProjectCleaner.getInstance().deleteSonar(SonarPropertiesWriter.getProjectKey(repo.getProjectID(), repo.getProjectName(), repo.getOwnerLogin(), repo.getUserType()));
+			ProjectCleaner.getInstance().deleteFolder(filePath);
 			logger.error("Unknown Exception when processing "+repositoryURL,e);
 			return false;
 		}		
@@ -161,27 +159,5 @@ public class RepositoryProcessor {
 	
 	public Repository getRepo(){
 		return this.repo;
-	}
-	
-	public synchronized static boolean deleteSonar(String projectKey){
-		try {
-			if(new CMDProcessor().addCommand("curl -u admin:admin -X DELETE \"http://localhost:9000/api/projects/\""+projectKey).execute()==0)
-				return true;
-		} catch (InterruptedException | IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return false;
-	}
-	
-	public synchronized static boolean deleteFolder(String path){
-		try {
-			if(new CMDProcessor().addCommand("c:").addCommand("rd "+path+" /s /q").execute()==0)
-				return true;
-		} catch (InterruptedException | IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return false;
 	}
 }

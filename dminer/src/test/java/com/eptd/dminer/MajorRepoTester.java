@@ -66,8 +66,7 @@ public class MajorRepoTester {
 				System.out.println("AvgIssueHandledDays: " + processor.getRepo().getAvgIssueHandledDays());
 				for(int i=0;i<processor.getRepo().getSonarMetrics().size();i++)
 					System.out.println(processor.getRepo().getSonarMetrics().get(i).getKey() + ":"
-							+ processor.getRepo().getSonarMetrics().get(i).getValue() + "("
-							+ processor.getRepo().getSonarMetrics().get(i).getFormattedValue() + ")");
+							+ processor.getRepo().getSonarMetrics().get(i).getValue());
 				processor.getRepo().getContributors().stream().forEach(c->{
 					System.out.println("----------------------------------------------------");
 					System.out.println("userURL: " + c.getUserURL());

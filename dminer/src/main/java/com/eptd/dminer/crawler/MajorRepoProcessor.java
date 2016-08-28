@@ -12,6 +12,7 @@ import com.eptd.dminer.core.Authorization;
 import com.eptd.dminer.core.Configuration;
 import com.eptd.dminer.core.MajorRepository;
 import com.eptd.dminer.core.User;
+import com.eptd.dminer.processor.ProjectCleaner;
 import com.eptd.dminer.processor.ProjectLogger;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -133,7 +134,7 @@ public class MajorRepoProcessor extends RepositoryProcessor{
 			.collect(Collectors.toList());
 			this.majorRepo.addAllContributors(userData);
 			pool.awaitQuiescence(240, TimeUnit.MINUTES);
-			RepositoryProcessor.deleteFolder(filePath);
+			ProjectCleaner.getInstance().deleteFolder(filePath);
 			return true;
 		} catch (Exception e) {
 			logger.error("Unknown Exception when processing "+repositoryURL,e);

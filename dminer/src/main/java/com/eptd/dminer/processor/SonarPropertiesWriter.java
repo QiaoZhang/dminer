@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+
 import org.apache.commons.lang3.text.WordUtils;
 
 public class SonarPropertiesWriter {
@@ -88,7 +89,7 @@ public class SonarPropertiesWriter {
 				error = true;
 				count++;
 			}
-		}while (error&&count<logger.getConfig().getWriteRepeat());//WRITERREPEAT		
+		}while (error&&count<logger.getConfig().getWriteRepeat());//WRITERREPEAT
 		return false;
 	}
 
@@ -97,6 +98,6 @@ public class SonarPropertiesWriter {
 	}
 	
 	public static String getProjectKey(long id,String name,String login, String userType) {
-		return userType + "." + login + ":" + name + "." + id;
+		return login + ":" + name + ":" + id;
 	}
 }

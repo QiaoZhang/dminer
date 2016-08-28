@@ -118,6 +118,14 @@ public class Repository {
 	public void setVersion(String version) {
 		this.version = Optional.ofNullable(version).orElse("1.0.0");
 	}
+	
+	public SonarMetrics getSonarMetrics(String key){
+		for(int i=0;i<sonarMetrics.size();i++){
+			if(sonarMetrics.get(i).getKey().equals(key))
+				return sonarMetrics.get(i);
+		}
+		return null;
+	}
 
 	public ArrayList<SonarMetrics> getSonarMetrics() {
 		return Optional.ofNullable(sonarMetrics).orElse(new ArrayList<SonarMetrics>());

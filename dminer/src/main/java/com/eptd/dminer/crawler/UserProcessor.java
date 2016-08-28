@@ -145,6 +145,7 @@ public class UserProcessor {
 				List<Repository> ownRepos = repos.parallelStream().limit(MAXREPOS).map(repo -> {
 					RepositoryProcessor processor = new RepositoryProcessor(repo.get("url").getAsString(),auth,this.folderPath,logger);
 					if(processor.process()){
+						//TODO System.out.println(processor.getRepo().getProjectName()+"::"+processor.getRepo().getSonarMetrics().size());
 						if(processor.getRepo().getSonarMetrics().size()>0)
 							return processor.getRepo();
 						else
@@ -154,6 +155,7 @@ public class UserProcessor {
 				})
 				.filter(repo->repo!=null)
 				.collect(Collectors.toList());
+				System.out.println("Total Repos:" + ownRepos.size());
 				user.addAllOwnRepo(ownRepos);
 			}
 		}else
