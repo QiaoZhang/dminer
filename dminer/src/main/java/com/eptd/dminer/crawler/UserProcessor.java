@@ -16,8 +16,8 @@ import org.joda.time.Days;
 
 import com.eptd.dminer.core.Authorization;
 import com.eptd.dminer.core.Configuration;
-import com.eptd.dminer.core.Repository;
 import com.eptd.dminer.core.User;
+import com.eptd.dminer.processor.ProjectCleaner;
 import com.eptd.dminer.processor.ProjectLogger;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -75,18 +75,21 @@ public class UserProcessor {
 				pool.submit(()->extractOwnReposInfo());
 				//step 4: process contributed repositories with search API
 				pool.submit(()->extractContributedReposInfo());
-				pool.awaitQuiescence(120, TimeUnit.MINUTES);			
+				pool.awaitQuiescence(120, TimeUnit.MINUTES);		
 				user.setAvgReposData();
+				ProjectCleaner.getInstance().deleteFolder(folderPath);
 				return true;
 			}else{
 				logger.error("Captured data of url "+userURL+" is not valid.");
 				System.out.println(jsonUser.toString());
+				ProjectCleaner.getInstance().deleteFolder(folderPath);
 				return false;
 			}			
 		} catch (Exception e) {
 			logger.error("Unknown Exception when processing "+userURL,e);
+			ProjectCleaner.getInstance().deleteFolder(folderPath);
 			return false;
-		}		
+		}	
 	}
 	
 	private void extractBasicInfo(JsonObject jsonUser){
@@ -142,21 +145,20 @@ public class UserProcessor {
 						.mapToObj(i->response.getAsJsonArray().get(i).getAsJsonObject())
 						.filter(i->!i.get("url").getAsString().equals(logger.getRepoURL()))
 						.collect(Collectors.toList());
-				List<Repository> ownRepos = repos.parallelStream().limit(MAXREPOS).map(repo -> {
+				AtomicReference<User> atomicUser = new AtomicReference<User>(this.getUser());
+				repos.parallelStream().limit(MAXREPOS).map(repo -> {
 					RepositoryProcessor processor = new RepositoryProcessor(repo.get("url").getAsString(),auth,this.folderPath,logger);
 					if(processor.process()){
-						//TODO System.out.println(processor.getRepo().getProjectName()+"::"+processor.getRepo().getSonarMetrics().size());
-						if(processor.getRepo().getSonarMetrics().size()>0)
+						if(processor.getRepo().getSonarMetrics().size()>0){
+							atomicUser.get().addOwnRepo(processor.getRepo());
 							return processor.getRepo();
-						else
+						}else
 							return null;
 					}else
 						return null;
 				})
 				.filter(repo->repo!=null)
-				.collect(Collectors.toList());
-				System.out.println("Total Repos:" + ownRepos.size());
-				user.addAllOwnRepo(ownRepos);
+				.count();
 			}
 		}else
 			logger.error("Search results of "+user.getLogin()+"'s repos is not valid.");

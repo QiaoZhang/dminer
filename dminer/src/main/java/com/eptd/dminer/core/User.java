@@ -26,9 +26,39 @@ public class User {
 	private double avgIssuesCount;
 	private double avgHandledIssuesRatio;
 	private double avgIssueHandledDays;
-	private double avgMajorLanguageLOC;
-	private double avgDebtRatio;
+	//SonarQube metrics
+	//Reliability
+	private double avgBugs;
+	//Vulnerabilities
+	private double avgVulnerabilities;
+	//Maintainability
+	private double avgCodeSmells;
 	private double avgSqaleIndex;
+	private double avgDebtRatio;
+	//Duplications
+	private double avgDuplicatedLineDensity;
+	private double avgDuplicatedBlocks;
+	private double avgDuplicatedLines;
+	private double avgDuplicatedFiles;
+	//Size
+	private double avgMajorLanguageLOC;
+	private double avgLines;
+	private double avgStatements;
+	private double avgFunctions;
+	private double avgClasses;
+	private double avgFiles;
+	private double avgDirectories;
+	//Complexity
+	private double avgComplexity;
+	private double avgFileComplexity;
+	private double avgFunctionComplexity;
+	private double avgClassComplexity;
+	//Documentation
+	private double avgCommemtLineDensity;
+	private double avgCommentLines;
+	private double avgPublicAPI;
+	private double avgDocumentedAPIDensity;
+	private double avgUndocumentedAPI;	
 	//attributes from investigated pull request
 	private int numOfPullRequest;
 	private int numOfAcceptedPR;
@@ -59,9 +89,32 @@ public class User {
 		this.setAvgIssuesCount(0.0);
 		this.setAvgHandledIssuesRatio(0.0);
 		this.setAvgIssueHandledDays(0.0);
-		this.setAvgMajorLanguageLOC(0.0);
-		this.setAvgDebtRatio(0.0);
+		//sonarqube metrics
+		this.setAvgBugs(0.0);
+		this.setAvgVulnerabilities(0.0);
+		this.setAvgCodeSmells(0.0);
 		this.setAvgSqaleIndex(0.0);
+		this.setAvgDebtRatio(0.0);
+		this.setAvgDuplicatedLineDensity(0.0);
+		this.setAvgDuplicatedBlocks(0.0);
+		this.setAvgDuplicatedLines(0.0);
+		this.setAvgDuplicatedFiles(0.0);
+		this.setAvgMajorLanguageLOC(0.0);
+		this.setAvgLines(0.0);		
+		this.setAvgStatements(0.0);
+		this.setAvgFunctions(0.0);
+		this.setAvgClasses(0.0);
+		this.setAvgFiles(0.0);
+		this.setAvgDirectories(0.0);
+		this.setAvgComplexity(0.0);
+		this.setAvgFileComplexity(0.0);
+		this.setAvgFunctionComplexity(0.0);
+		this.setAvgClassComplexity(0.0);
+		this.setAvgCommemtLineDensity(0.0);
+		this.setAvgCommentLines(0.0);
+		this.setAvgPublicAPI(0.0);
+		this.setAvgDocumentedAPIDensity(0.0);
+		this.setAvgUndocumentedAPI(0.0);
 		//pull requests
 		this.setNumOfPullRequest(0);
 		this.setNumOfAcceptedPR(0);
@@ -305,6 +358,182 @@ public class User {
 		this.avgDaysIntervalOfPR = Optional.ofNullable(avgDaysIntervalOfPR).orElse(0.0);
 	}
 	
+	public double getAvgBugs() {
+		return avgBugs;
+	}
+
+	public void setAvgBugs(double avgBugs) {
+		this.avgBugs = avgBugs;
+	}
+	
+	public double getAvgVulnerabilities() {
+		return avgVulnerabilities;
+	}
+
+	public void setAvgVulnerabilities(double avgVulnerabilities) {
+		this.avgVulnerabilities = avgVulnerabilities;
+	}
+
+	public double getAvgCodeSmells() {
+		return avgCodeSmells;
+	}
+
+	public void setAvgCodeSmells(double avgCodeSmells) {
+		this.avgCodeSmells = avgCodeSmells;
+	}
+
+	public double getAvgDuplicatedLineDensity() {
+		return avgDuplicatedLineDensity;
+	}
+
+	public void setAvgDuplicatedLineDensity(double avgDuplicatedLineDensity) {
+		this.avgDuplicatedLineDensity = avgDuplicatedLineDensity;
+	}
+
+	public double getAvgDuplicatedBlocks() {
+		return avgDuplicatedBlocks;
+	}
+
+	public void setAvgDuplicatedBlocks(double avgDuplicatedBlocks) {
+		this.avgDuplicatedBlocks = avgDuplicatedBlocks;
+	}
+
+	public double getAvgDuplicatedLines() {
+		return avgDuplicatedLines;
+	}
+
+	public void setAvgDuplicatedLines(double avgDuplicatedLines) {
+		this.avgDuplicatedLines = avgDuplicatedLines;
+	}
+
+	public double getAvgDuplicatedFiles() {
+		return avgDuplicatedFiles;
+	}
+
+	public void setAvgDuplicatedFiles(double avgDuplicatedFiles) {
+		this.avgDuplicatedFiles = avgDuplicatedFiles;
+	}
+
+	public double getAvgLines() {
+		return avgLines;
+	}
+
+	public void setAvgLines(double avgLines) {
+		this.avgLines = avgLines;
+	}
+
+	public double getAvgStatements() {
+		return avgStatements;
+	}
+
+	public void setAvgStatements(double avgStatements) {
+		this.avgStatements = avgStatements;
+	}
+
+	public double getAvgFunctions() {
+		return avgFunctions;
+	}
+
+	public void setAvgFunctions(double avgFunctions) {
+		this.avgFunctions = avgFunctions;
+	}
+
+	public double getAvgClasses() {
+		return avgClasses;
+	}
+
+	public void setAvgClasses(double avgClasses) {
+		this.avgClasses = avgClasses;
+	}
+
+	public double getAvgFiles() {
+		return avgFiles;
+	}
+
+	public void setAvgFiles(double avgFiles) {
+		this.avgFiles = avgFiles;
+	}
+
+	public double getAvgDirectories() {
+		return avgDirectories;
+	}
+
+	public void setAvgDirectories(double avgDirectories) {
+		this.avgDirectories = avgDirectories;
+	}
+
+	public double getAvgComplexity() {
+		return avgComplexity;
+	}
+
+	public void setAvgComplexity(double avgComplexity) {
+		this.avgComplexity = avgComplexity;
+	}
+
+	public double getAvgFileComplexity() {
+		return avgFileComplexity;
+	}
+
+	public void setAvgFileComplexity(double avgFileComplexity) {
+		this.avgFileComplexity = avgFileComplexity;
+	}
+
+	public double getAvgFunctionComplexity() {
+		return avgFunctionComplexity;
+	}
+
+	public void setAvgFunctionComplexity(double avgFunctionComplexity) {
+		this.avgFunctionComplexity = avgFunctionComplexity;
+	}
+
+	public double getAvgClassComplexity() {
+		return avgClassComplexity;
+	}
+
+	public void setAvgClassComplexity(double avgClassComplexity) {
+		this.avgClassComplexity = avgClassComplexity;
+	}
+
+	public double getAvgCommemtLineDensity() {
+		return avgCommemtLineDensity;
+	}
+
+	public void setAvgCommemtLineDensity(double avgCommemtLineDensity) {
+		this.avgCommemtLineDensity = avgCommemtLineDensity;
+	}
+
+	public double getAvgCommentLines() {
+		return avgCommentLines;
+	}
+
+	public void setAvgCommentLines(double avgCommentLines) {
+		this.avgCommentLines = avgCommentLines;
+	}
+
+	public double getAvgPublicAPI() {
+		return avgPublicAPI;
+	}
+
+	public void setAvgPublicAPI(double avgPublicAPI) {
+		this.avgPublicAPI = avgPublicAPI;
+	}
+
+	public double getAvgDocumentedAPIDensity() {
+		return avgDocumentedAPIDensity;
+	}
+
+	public void setAvgDocumentedAPIDensity(double avgDocumentedAPIDensity) {
+		this.avgDocumentedAPIDensity = avgDocumentedAPIDensity;
+	}
+
+	public double getAvgUndocumentedAPI() {
+		return avgUndocumentedAPI;
+	}
+
+	public void setAvgUndocumentedAPI(double avgUndocumentedAPI) {
+		this.avgUndocumentedAPI = avgUndocumentedAPI;
+	}
+
 	//own repos arraylist operation
 	public void addOwnRepo(Repository repo){
 		this.ownRepos.add(repo);
@@ -338,9 +567,8 @@ public class User {
 		 * [3] totalSqaleIndex
 		 * [4] totalDebtRatio
 		 */
-		Double[] initDouble = {0.0,0.0,0.0,0.0,0.0};
+		Double[] initDouble = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 		AtomicReferenceArray<Double> totalsDouble = new AtomicReferenceArray<Double>(initDouble);
-		System.out.println("OwnRepos:"+ownRepos.size());
 		this.numOfAnalyzedRepos = Math.toIntExact(ownRepos.parallelStream()
 			.filter(repo -> repo.getSonarMetrics()!=null&&repo.getSonarMetrics().size()>0)
 			.map(repo->{
@@ -360,13 +588,33 @@ public class User {
 					totalsLong.incrementAndGet(6);
 				}				
 				//double variables
-				System.out.println(repo.getSonarMetrics("ncloc").getValue());
-				totalsDouble.accumulateAndGet(2, repo.getSonarMetrics("ncloc").getValue(), (m,n)->m+n);//totalMajorLanguageLOC
-				totalsDouble.accumulateAndGet(3, repo.getSonarMetrics("sqale_index").getValue(), (m,n)->m+n);//totalSqaleIndex
-				totalsDouble.accumulateAndGet(4, repo.getSonarMetrics("sqale_debt_ratio").getValue(), (m,n)->m+n);//totalDebtRatio
+				totalsDouble.accumulateAndGet(2, repo.getSonarMetrics("bugs").getValue(), (m,n)->m+n);//totalBugs
+				totalsDouble.accumulateAndGet(3, repo.getSonarMetrics("vulnerabilities").getValue(), (m,n)->m+n);//totalVulnerabilities
+				totalsDouble.accumulateAndGet(4, repo.getSonarMetrics("code_smells").getValue(), (m,n)->m+n);//totalCodeSmells
+				totalsDouble.accumulateAndGet(5, repo.getSonarMetrics("sqale_index").getValue(), (m,n)->m+n);//totalSQALEIndex
+				totalsDouble.accumulateAndGet(6, repo.getSonarMetrics("sqale_debt_ratio").getValue(), (m,n)->m+n);//totalDebtRatio
+				totalsDouble.accumulateAndGet(7, repo.getSonarMetrics("duplicated_lines_density").getValue(), (m,n)->m+n);//totalDuplicatedLinesDensity
+				totalsDouble.accumulateAndGet(8, repo.getSonarMetrics("duplicated_blocks").getValue(), (m,n)->m+n);//totalDuplicatedBlocks
+				totalsDouble.accumulateAndGet(9, repo.getSonarMetrics("duplicated_lines").getValue(), (m,n)->m+n);//totalDuplicatedLines
+				totalsDouble.accumulateAndGet(10, repo.getSonarMetrics("duplicated_files").getValue(), (m,n)->m+n);//totalDuplicatedFiles
+				totalsDouble.accumulateAndGet(11, repo.getSonarMetrics("ncloc").getValue(), (m,n)->m+n);//totalLOC
+				totalsDouble.accumulateAndGet(12, repo.getSonarMetrics("lines").getValue(), (m,n)->m+n);//totalLines
+				totalsDouble.accumulateAndGet(13, repo.getSonarMetrics("statements").getValue(), (m,n)->m+n);//totalStatements
+				totalsDouble.accumulateAndGet(14, repo.getSonarMetrics("functions").getValue(), (m,n)->m+n);//totalFunctions
+				totalsDouble.accumulateAndGet(15, repo.getSonarMetrics("classes").getValue(), (m,n)->m+n);//totalClasses
+				totalsDouble.accumulateAndGet(16, repo.getSonarMetrics("files").getValue(), (m,n)->m+n);//totalFiles
+				totalsDouble.accumulateAndGet(17, repo.getSonarMetrics("directories").getValue(), (m,n)->m+n);//totalDirectories
+				totalsDouble.accumulateAndGet(18, repo.getSonarMetrics("complexity").getValue(), (m,n)->m+n);//totalCompelxity
+				totalsDouble.accumulateAndGet(19, repo.getSonarMetrics("file_complexity").getValue(), (m,n)->m+n);//totalFileComplexity
+				totalsDouble.accumulateAndGet(20, repo.getSonarMetrics("function_complexity").getValue(), (m,n)->m+n);//totalFunctionComplexity
+				totalsDouble.accumulateAndGet(21, repo.getSonarMetrics("class_complexity").getValue(), (m,n)->m+n);//totalClassComplexity
+				totalsDouble.accumulateAndGet(22, repo.getSonarMetrics("comment_lines_density").getValue(), (m,n)->m+n);//totalCommentLinesDensity
+				totalsDouble.accumulateAndGet(23, repo.getSonarMetrics("comment_lines").getValue(), (m,n)->m+n);//totalCommentLines
+				totalsDouble.accumulateAndGet(24, repo.getSonarMetrics("public_api").getValue(), (m,n)->m+n);//totalPublicAPI
+				totalsDouble.accumulateAndGet(25, repo.getSonarMetrics("public_documented_api_density").getValue(), (m,n)->m+n);//totalDocumentedAPIDensity
+				totalsDouble.accumulateAndGet(26, repo.getSonarMetrics("public_undocumented_api").getValue(), (m,n)->m+n);//totalUndocumentedAPI
 				return true;
 			}).count());
-		System.out.println("OwnRepos:"+ownRepos.size());
 		if(this.numOfAnalyzedRepos != 0){
 			//set basic repo info
 			this.setAvgSize((double)totalsLong.get(0)/(double)this.numOfAnalyzedRepos);
@@ -380,9 +628,36 @@ public class User {
 			if(totalsLong.get(6) != 0)
 				this.setAvgIssueHandledDays(totalsDouble.get(1)/totalsLong.get(6));						
 			//set SonarQube analysis results
+			this.setAvgBugs(totalsDouble.get(2)/this.numOfAnalyzedRepos);
+			this.setAvgVulnerabilities(totalsDouble.get(3)/this.numOfAnalyzedRepos);
+			this.setAvgCodeSmells(totalsDouble.get(4)/this.numOfAnalyzedRepos);
+			this.setAvgSqaleIndex(totalsDouble.get(5)/this.numOfAnalyzedRepos);
+			this.setAvgDebtRatio(totalsDouble.get(6)/this.numOfAnalyzedRepos);
+			this.setAvgDuplicatedLineDensity(totalsDouble.get(7)/this.numOfAnalyzedRepos);
+			this.setAvgDuplicatedBlocks(totalsDouble.get(8)/this.numOfAnalyzedRepos);
+			this.setAvgDuplicatedLines(totalsDouble.get(9)/this.numOfAnalyzedRepos);
+			this.setAvgDuplicatedFiles(totalsDouble.get(10)/this.numOfAnalyzedRepos);
+			this.setAvgMajorLanguageLOC(totalsDouble.get(11)/this.numOfAnalyzedRepos);
+			this.setAvgLines(totalsDouble.get(12)/this.numOfAnalyzedRepos);
+			this.setAvgStatements(totalsDouble.get(13)/this.numOfAnalyzedRepos);
+			this.setAvgFunctions(totalsDouble.get(14)/this.numOfAnalyzedRepos);
+			this.setAvgClasses(totalsDouble.get(15)/this.numOfAnalyzedRepos);
+			this.setAvgFiles(totalsDouble.get(16)/this.numOfAnalyzedRepos);
+			this.setAvgDirectories(totalsDouble.get(17)/this.numOfAnalyzedRepos);
+			this.setAvgComplexity(totalsDouble.get(18)/this.numOfAnalyzedRepos);
+			this.setAvgFileComplexity(totalsDouble.get(19)/this.numOfAnalyzedRepos);
+			this.setAvgFunctionComplexity(totalsDouble.get(20)/this.numOfAnalyzedRepos);
+			this.setAvgClassComplexity(totalsDouble.get(21)/this.numOfAnalyzedRepos);
+			this.setAvgCommemtLineDensity(totalsDouble.get(22)/this.numOfAnalyzedRepos);
+			this.setAvgCommentLines(totalsDouble.get(23)/this.numOfAnalyzedRepos);
+			this.setAvgPublicAPI(totalsDouble.get(24)/this.numOfAnalyzedRepos);
+			this.setAvgDocumentedAPIDensity(totalsDouble.get(25)/this.numOfAnalyzedRepos);
+			this.setAvgUndocumentedAPI(totalsDouble.get(26)/this.numOfAnalyzedRepos);
 			this.setAvgMajorLanguageLOC(totalsDouble.get(2)/this.numOfAnalyzedRepos);
 			this.setAvgSqaleIndex(totalsDouble.get(3)/this.numOfAnalyzedRepos);	
 			this.setAvgDebtRatio(totalsDouble.get(4)/this.numOfAnalyzedRepos);			
 		}			
 	}
+
+	
 }

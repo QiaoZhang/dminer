@@ -17,7 +17,12 @@ public class SonarAnalysisProcessor {
 	
 	private String projectKey;
 	
-	private final String[] sonarMetrics = {"ncloc","sqale_index","sqale_debt_ratio"};
+	private final String[] sonarMetrics = {
+			"bugs","vulnerabilities","code_smells","sqale_index","sqale_debt_ratio",
+			"duplicated_lines_density","duplicated_blocks","duplicated_lines","duplicated_files",
+			"ncloc","lines","statements","functions","classes","files","directories","complexity",
+			"file_complexity","function_complexity","class_complexity","comment_lines_density",
+			"comment_lines","public_api","public_documented_api_density","public_undocumented_api"};
 	
 	/**
 	 * Construct a repository processor for SonarQube analysis with specified release version
@@ -57,15 +62,12 @@ public class SonarAnalysisProcessor {
 			cmd.addCommand("git clone "+ repositoryHTML + " " + filePath);
 			if(cmd.execute() != 0)
 				throw new Exception("Project "+projectName+" fails to be cloned to local drive");
-			//step 2: write properties file
-			
+			//step 2: write properties file			
 			if(!SonarPropertiesWriter.getInstance().write(logger,projectID,projectName,login,userType,language,version,filePath))
 				throw new Exception("Project properties file of "+projectName+" fails to be created");
-			//latch.await();
 			//step 3: run SonarQube analysis
 			if(!SonarRunnerProcessor.getInstance().execute(filePath))
 				throw new Exception("Project "+projectName+" fails to be analyzed by SonarQube");
-			//latch.await();
 			return SonarResultExtractor.getInstance().extract(logger, projectKey, sonarMetrics);
 		} catch (Exception e) {
 			logger.error("Sonar-runner project "+projectName,e);

@@ -72,10 +72,11 @@ public class RepositoryProcessor {
 					result.set(sonarProcessor.process());					
 				});
 				pool.awaitQuiescence(60, TimeUnit.MINUTES);
+				ProjectCleaner.getInstance().deleteSonar(sonarProcessor.getProjectKey());
 				if(result.get()!=null)
 					repo.setSonarMetrics(result.get());
-				ProjectCleaner.getInstance().deleteSonar(sonarProcessor.getProjectKey());
-				ProjectCleaner.getInstance().deleteFolder(filePath);
+				else
+					return false;
 				return true;	
 			}else{
 				logger.error("Captured data of url "+repositoryURL+" is not valid.");
@@ -83,7 +84,6 @@ public class RepositoryProcessor {
 			}
 		} catch (Exception e) {
 			ProjectCleaner.getInstance().deleteSonar(SonarPropertiesWriter.getProjectKey(repo.getProjectID(), repo.getProjectName(), repo.getOwnerLogin(), repo.getUserType()));
-			ProjectCleaner.getInstance().deleteFolder(filePath);
 			logger.error("Unknown Exception when processing "+repositoryURL,e);
 			return false;
 		}		
