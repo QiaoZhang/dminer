@@ -570,7 +570,7 @@ public class User {
 		Double[] initDouble = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 		AtomicReferenceArray<Double> totalsDouble = new AtomicReferenceArray<Double>(initDouble);
 		this.numOfAnalyzedRepos = Math.toIntExact(ownRepos.parallelStream()
-			.filter(repo -> repo.getSonarMetrics()!=null&&repo.getSonarMetrics().size()>0)
+			.filter(repo -> repo.getSonarMetrics()!=null&&repo.getSonarMetrics().size()==25)
 			.map(repo->{
 				//long variables
 				totalsLong.addAndGet(0, repo.getSize());//totalSize

@@ -20,10 +20,10 @@ public class App {
 		ProjectLogger mainLogger = new ProjectLogger("https://api.github.com/repos/qiaozhang/dminer",Configuration.getDefaultConfig());
 		try {
 			//eptd-dminer.properties file has to be located at the same level of executable jar file
-			String filePath = "./dminer";		
+			String filePath = ".\\dminer";		
 			//reading configuration from properties file
 			Configuration config = new Configuration();
-			if(config.load("./eptd-dminer.properties")){			
+			if(config.load(".\\eptd-dminer.properties")){			
 				//Initialization
 				AtomicInteger failed = new AtomicInteger(0);
 				do{					
