@@ -9,6 +9,7 @@ import com.eptd.dminer.crawler.GitHubAPIClient;
 import com.eptd.dminer.crawler.MajorRepoProcessor;
 import com.eptd.dminer.crawler.SearchQueryGenerator;
 import com.eptd.dminer.processor.DataPoster;
+import com.eptd.dminer.processor.ProjectCleaner;
 import com.eptd.dminer.processor.ProjectLogger;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -42,7 +43,8 @@ public class App {
 							if(!task.getParaStars().equals(""))
 								generator.addSearchTerm("stars", task.getParaStars());
 							if(!task.getParaUser().equals(""))
-								generator.addSearchTerm("user", task.getParaUser());						
+								generator.addSearchTerm("user", task.getParaUser());
+							System.out.println("Processing task "+task.getTaskID()+" with search term "+generator.getSearchStr());
 							GitHubAPIClient client = new GitHubAPIClient(auth,mainLogger)
 									.addParameter("q", generator.getSearchStr())
 									.addParameter("sort", "forks");
@@ -68,7 +70,10 @@ public class App {
 							})
 							.filter(mr -> mr!=null)
 							.count());
+							if(failed.get() == 0)
+								failed.set(-1);
 							auth.revokeOAuthToken();
+							ProjectCleaner.getInstance().deleteFolder(filePath);
 						}else{
 							//sleep if received task is null
 							System.out.println("No task assigned to client "+config.getClient().getFingerPrint()+", thread gonna sleep for "+SLEEP+" mins.");
