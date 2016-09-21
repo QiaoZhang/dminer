@@ -16,6 +16,7 @@ public class User {
 	private int numOfAssignees;					//count of being assignee
 	private long followers;
 	private String folderPath;
+	private long contribution;
 	//attributes from owned repositories
 	private ArrayList<Repository> ownRepos;						
 	private int numOfAnalyzedRepos;
@@ -657,6 +658,14 @@ public class User {
 			this.setAvgSqaleIndex(totalsDouble.get(3)/this.numOfAnalyzedRepos);	
 			this.setAvgDebtRatio(totalsDouble.get(4)/this.numOfAnalyzedRepos);			
 		}			
+	}
+
+	public long getContribution() {
+		return contribution;
+	}
+
+	public void setContribution(long contribution) {
+		this.contribution = contribution;
 	}
 
 	

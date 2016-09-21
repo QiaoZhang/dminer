@@ -20,7 +20,7 @@ public class MajorProcessorTester {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		logger = new ProjectLogger("https://api.github.com/repos/byoutline/kickmaterial",Configuration.getDefaultConfig());
-		auth = new Authorization(logger).createOAuthToken();
+		auth = new Authorization(logger);
 	}
 
 	@AfterClass
@@ -49,6 +49,9 @@ public class MajorProcessorTester {
 		System.out.println("IssuesCount: " + processor.getRepo().getIssuesCount());
 		System.out.println("HandledIssuesCount: " + processor.getRepo().getHandledIssuesCount());
 		System.out.println("AvgIssueHandledDays: " + processor.getRepo().getAvgIssueHandledDays());
+		System.out.println("Number of filtered user: "+processor.getRepo().getFilteredContributors().size());
+		System.out.println("TotalContributions: "+processor.getRepo().getTotalContribution());
+		System.out.println("MaxContributions: "+processor.getRepo().getMaxContribution());
 		for(int i=0;i<processor.getRepo().getSonarMetrics().size();i++)
 			System.out.println(processor.getRepo().getSonarMetrics().get(i).getKey() + ":"
 					+ processor.getRepo().getSonarMetrics().get(i).getValue());
@@ -63,6 +66,7 @@ public class MajorProcessorTester {
 			System.out.println("numOfAssignees: " + c.getNumOfAssignees());
 			System.out.println("followers: " + c.getFollowers());
 			System.out.println("folderPath: " + c.getFolderPath());
+			System.out.println("contributions: " + c.getContribution());
 			System.out.println("**********owned repositories**********");
 			System.out.println("numOfAnalyzedRepos: " + c.getNumOfAnalyzedRepos());
 			System.out.println("avgSize: " + c.getAvgSize());
@@ -109,8 +113,8 @@ public class MajorProcessorTester {
 			System.out.println("avgDaysIntervalOfPR: " + c.getAvgDaysIntervalOfPR());
 		});
 		//send major repo data to data saver
-		JsonElement jsonElement = DataPoster.getInstance().post(Configuration.getDefaultConfig().getDsaverURL(),processor.getRepo(),1);
-		System.out.println(jsonElement.getAsJsonObject().toString());
+		//JsonElement jsonElement = DataPoster.getInstance().post(Configuration.getDefaultConfig().getDsaverURL(),processor.getRepo(),1);
+		//System.out.println(jsonElement.getAsJsonObject().toString());
 	}
 
 }

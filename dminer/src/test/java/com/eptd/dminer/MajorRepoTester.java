@@ -20,7 +20,7 @@ public class MajorRepoTester {
 		int taskID = 1;
 		Configuration config = Configuration.getDefaultConfig();
 		ProjectLogger mainLogger = new ProjectLogger("https://api.github.com/repos/qiaozhang/dminer",config);
-		Authorization auth = new Authorization(mainLogger).createOAuthToken();
+		Authorization auth = new Authorization(mainLogger);
 		//ArrayList<String> urls = new ArrayList<String>();
 		//urls.add("https://api.github.com/repos/apache/tajo");
 		//urls.add("https://api.github.com/repos/laobie/StatusBarUtil");

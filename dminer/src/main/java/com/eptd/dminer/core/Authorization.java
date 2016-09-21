@@ -25,10 +25,6 @@ public class Authorization{
 	private String OAuthToken;
 	private String data = "{\"client_secret\":\"----------------------------------------\",\"scope\":[\"repo\",\"gist\",\"user\"],\"note\":\"";
 	
-	public Authorization(String OAuthToken){
-		this.OAuthTokenHeader = new BasicHeader("Authorization",OAuthToken);
-	}
-	
 	public Authorization(ProjectLogger logger){
 		this.logger = new ProjectLogger(logger).append(" Authorization");
 		this.BasicAuthHeader = new BasicHeader("Authorization","Basic "+ Base64.getEncoder().encodeToString(
@@ -40,11 +36,13 @@ public class Authorization{
 		
 	}
 	
-	public String getOAuthToken() {
+	public String getOAuthToken() {		
 		return this.OAuthToken;
 	}
 	
 	public Header getOAuthTokenHeader(){
+		if(this.OAuthToken == null)
+			return this.BasicAuthHeader;
 		return this.OAuthTokenHeader;
 	}
 	
@@ -52,7 +50,7 @@ public class Authorization{
 	 * Create a GitHub Developer Application OAuth Token
 	 * @return this if success; null if failed
 	 */
-	public Authorization createOAuthToken(){		
+	public Authorization createOAuthToken(){
 		try {
 			GitHubAPIClient client = new GitHubAPIClient(logger);
 			if(BasicAuthHeader == null||DeleteHeader == null){
@@ -73,6 +71,8 @@ public class Authorization{
 	}
 	
 	public boolean revokeOAuthToken(){
+		if(this.OAuthTokenHeader == null)
+			return false;
 		try {
 			GitHubAPIClient client = new GitHubAPIClient(logger);
 			if(DeleteHeader == null){

@@ -18,7 +18,7 @@ public class RepoProcessorTester {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		logger = new ProjectLogger("https://api.github.com/repos/qiaozhang/junit-tester",Configuration.getDefaultConfig());
-		auth = new Authorization(logger).createOAuthToken();
+		auth = new Authorization(logger);
 	}
 
 	@AfterClass
