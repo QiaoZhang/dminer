@@ -19,7 +19,7 @@ public class MajorProcessorTester {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		logger = new ProjectLogger("https://api.github.com/repos/byoutline/kickmaterial",Configuration.getDefaultConfig());
+		logger = new ProjectLogger("https://api.github.com/repos/byoutline/kickmaterial",Configuration.getDefaultConfig().setUpperBound(3));
 		auth = new Authorization(logger);
 	}
 

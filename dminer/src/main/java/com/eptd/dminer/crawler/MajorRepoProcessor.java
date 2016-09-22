@@ -116,8 +116,8 @@ public class MajorRepoProcessor extends RepositoryProcessor{
 				AtomicLong totalConNum = new AtomicLong(0);//total contributions number
 				//step 2.1: process filtered contributors
 				List<FilteredUser> filteredContributors = originalContributors.parallelStream()				
-				.peek(fc->totalConNum.addAndGet(fc.get("contributions").getAsLong()))//add up all contributors' contributions
 				.skip(UPPERBOUND)//UPPERBOUND: limit the number of analyzed contributors
+				.peek(fc->totalConNum.addAndGet(fc.get("contributions").getAsLong()))//add up all contributors' contributions
 				.map(fc->{//skip operation will consume all items
 					FilteredUserProcessor processor = new FilteredUserProcessor(fc,logger);
 					if(processor.process())
@@ -129,10 +129,8 @@ public class MajorRepoProcessor extends RepositoryProcessor{
 				.collect(Collectors.toList());
 				//step 2.2: process qualified contributors
 				List<User> contributors = originalContributors.parallelStream()
-				.peek(c->{
-					if(originalContributors.size()<=UPPERBOUND)
-						totalConNum.addAndGet(c.get("contributions").getAsLong());
-				})
+				.limit(UPPERBOUND)
+				.peek(c->totalConNum.addAndGet(c.get("contributions").getAsLong()))
 				.map(c->{
 					UserProcessor processor = new UserProcessor(c.get("url").getAsString(),auth,filePath,logger);
 					if(processor.process()){
@@ -151,8 +149,6 @@ public class MajorRepoProcessor extends RepositoryProcessor{
 				this.majorRepo.addAllFilteredContributors(filteredContributors);
 				this.majorRepo.addAllContributors(contributors);
 			}else{
-				//TODO
-				System.out.println(response.toString());
 				logger.error("Captured data of url "+repositoryURL+"/contributors is not valid.");
 				return false;
 			}			
