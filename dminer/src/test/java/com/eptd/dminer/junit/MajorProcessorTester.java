@@ -113,8 +113,8 @@ public class MajorProcessorTester {
 			System.out.println("avgDaysIntervalOfPR: " + c.getAvgDaysIntervalOfPR());
 		});
 		//send major repo data to data saver
-		//JsonElement jsonElement = DataPoster.getInstance().post(Configuration.getDefaultConfig().getDsaverURL(),processor.getRepo(),1);
-		//System.out.println(jsonElement.getAsJsonObject().toString());
+		JsonElement jsonElement = DataPoster.getInstance().post(Configuration.getDefaultConfig().getDsaverURL(),processor.getRepo().setNewTaskID(100),1);
+		System.out.println(jsonElement.getAsJsonObject().toString());
 	}
 
 }

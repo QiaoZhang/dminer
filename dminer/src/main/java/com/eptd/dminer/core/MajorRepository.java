@@ -51,6 +51,10 @@ public class MajorRepository extends Repository{
 		this.filteredContributors = filteredCons;
 	}
 	
+	public void addFilteredContributors(FilteredUser contributor){
+		this.filteredContributors.add(contributor);
+	}
+	
 	public void addAllFilteredContributors(List<FilteredUser> filteredContributors){
 		this.filteredContributors.addAll(filteredContributors);
 	}
