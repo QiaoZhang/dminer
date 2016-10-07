@@ -22,26 +22,36 @@ public class SonarResultExtractor {
 	 */
 	public synchronized ArrayList<SonarMetrics> extract(ProjectLogger logger,String projectKey, String[] metricsKeys){
 		ProjectLogger instanceLogger = new ProjectLogger(logger).append("SonarResultExtractor");
-		try {	
-			HttpClient httpClient = HttpClientBuilder.create().build();
-			HttpGet request = new HttpGet(url
-					.replace("SONAR", logger.getConfig().getSonarURL())
-					.replace("PROJECTKEY", projectKey)
-					.replace("METRICKEYS", formatKeys(metricsKeys)));
-			int repeat = 0;
-			do{
-				JsonObject response = new JsonParser().parse(IOUtils.toString(httpClient.execute(request).getEntity().getContent(),"UTF-8")).getAsJsonObject();
-				if(response.get("component").getAsJsonObject().get("measures").getAsJsonArray().size()>0)
-					return extractMetrics(response.get("component").getAsJsonObject().get("measures").getAsJsonArray());
-				else
-					Thread.sleep(1000);
-				repeat++;
-			}while(repeat<1000);
-			return null;
-		}catch (Exception e){
-			instanceLogger.error("Unknown Exception when extracting sonar metrics of "+projectKey, e);
-			return null;
-		}
+		boolean error = false;
+		int count = 0;
+		do{
+			try {
+				if(error == true)
+					Thread.sleep(20000);
+				HttpClient httpClient = HttpClientBuilder.create().build();
+				HttpGet request = new HttpGet(url
+						.replace("SONAR", logger.getConfig().getSonarURL())
+						.replace("PROJECTKEY", projectKey)
+						.replace("METRICKEYS", formatKeys(metricsKeys)));
+				int repeat = 0;
+				do{
+					JsonObject response = new JsonParser().parse(IOUtils.toString(httpClient.execute(request).getEntity().getContent(),"UTF-8")).getAsJsonObject();
+					if(response.get("component")!=null&&!response.get("component").isJsonNull()&&							
+							response.get("component").getAsJsonObject().get("measures")!=null&&
+							response.get("component").getAsJsonObject().get("measures").isJsonArray()&&
+							response.get("component").getAsJsonObject().get("measures").getAsJsonArray().size()>0)
+						return extractMetrics(response.get("component").getAsJsonObject().get("measures").getAsJsonArray());
+					else
+						Thread.sleep(1000);
+					repeat++;
+				}while(repeat<1000);
+			}catch (Exception e){
+				instanceLogger.error("Unknown Exception when extracting sonar metrics of "+projectKey, e);
+				error = true;
+				count++;
+			}
+		}while(error&&count<logger.getConfig().getWriteRepeat());
+		return null;
 	}
 	
 	private String formatKeys(String[] metricsKeys){

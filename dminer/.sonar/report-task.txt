@@ -1,0 +1,5 @@
+projectKey=qiaozhang:dminer
+serverUrl=http://localhost:9000
+dashboardUrl=http://localhost:9000/dashboard/index/qiaozhang:dminer
+ceTaskId=AVdx3ip-9rDkR_LVXQb9
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AVdx3ip-9rDkR_LVXQb9

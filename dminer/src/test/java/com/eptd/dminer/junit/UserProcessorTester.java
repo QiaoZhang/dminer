@@ -1,5 +1,7 @@
 package com.eptd.dminer.junit;
 
+import java.util.concurrent.ForkJoinPool;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,7 +30,8 @@ public class UserProcessorTester {
 
 	@Test(timeout=600000)
 	public void test() {
-		UserProcessor processor = new UserProcessor("https://api.github.com/users/code4craft",auth,"C:\\EPTD",logger);
+		ForkJoinPool pool = new ForkJoinPool(8);
+		UserProcessor processor = new UserProcessor("https://api.github.com/users/code4craft",auth,"C:\\EPTD",logger,pool);
 		Assert.assertTrue(processor.process());
 		System.out.println("userURL: " + processor.getUser().getUserURL());
 		System.out.println("userHTML: " + processor.getUser().getUserHTML());

@@ -31,7 +31,7 @@ public class App {
 					try {
 						Task task = DataPoster.getTask(config.getDsaverURL(), config.getClient(), failed.get());
 						if(task != null){
-							Authorization auth = new Authorization(mainLogger).createOAuthToken();
+							Authorization auth = new Authorization(mainLogger);
 							//get repos according to assigned task
 							SearchQueryGenerator generator = new SearchQueryGenerator("repo");
 							if(!task.getParaLanguage().equals(""))
@@ -52,7 +52,8 @@ public class App {
 							List<JsonObject> majorRepos = IntStream.rangeClosed(0, response.getAsJsonArray().size()-1)
 									.mapToObj(i->response.getAsJsonArray().get(i).getAsJsonObject())
 									.collect(Collectors.toList());						
-							failed.set((int)majorRepos.parallelStream()
+							failed.set((int)majorRepos.stream()
+							.filter(mr -> !task.getFinishedRepos().contains(mr.get("id").getAsLong()))//filtering all finished repos
 							.map(mr->{
 								//for each sub-task
 								ProjectLogger logger = new ProjectLogger(mr.get("url").getAsString(),config);
@@ -65,8 +66,10 @@ public class App {
 										return mr;
 									}else
 										return null;
-								}else
+								}else{
+									failed.incrementAndGet();
 									return mr;
+								}
 							})
 							.filter(mr -> mr!=null)
 							.count());

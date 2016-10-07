@@ -5,12 +5,11 @@ import java.io.IOException;
 public class SonarRunnerProcessor {
 	private static final SonarRunnerProcessor instance = new SonarRunnerProcessor();
 	
-	public synchronized boolean execute(String filePath) throws InterruptedException, IOException{
-		CMDProcessor cmd = new CMDProcessor();
+	public synchronized boolean execute(String filePath,CMDProcessor cmd) throws InterruptedException, IOException{
 		cmd.addCommand(filePath.substring(0, 2));
 		cmd.addCommand("cd " + filePath);
-	    cmd.addCommand("sonar-runner");
-	    if(cmd.execute() != 0)
+	    cmd.addCommand("sonar-scanner");
+	    if(!cmd.execute())
 	    	return false;
 		return true;
 	}

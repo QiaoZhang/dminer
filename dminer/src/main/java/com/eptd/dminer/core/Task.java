@@ -1,5 +1,8 @@
 package com.eptd.dminer.core;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.joda.time.DateTime;
 
 public class Task {
@@ -15,6 +18,7 @@ public class Task {
 	private String paraStars = null;
 	private String paraForks = null;
 	private DateTime created = new DateTime();
+	private ArrayList<Long> finishedRepos = new ArrayList<Long>();
 	
 	public int getTaskID() {
 		return taskID;
@@ -122,5 +126,21 @@ public class Task {
 	public Task setCreated(DateTime created) {
 		this.created = created;
 		return this;
+	}
+
+	public ArrayList<Long> getFinishedRepos() {
+		return finishedRepos;
+	}
+
+	public void setFinishedRepos(ArrayList<Long> finishedRepos) {
+		this.finishedRepos = finishedRepos;
+	}
+	
+	public void addFinishedRepos(Long finishedRepo){
+		this.finishedRepos.add(finishedRepo);
+	}
+	
+	public void addAllFinishedRepos(List<Long> finishedRepos){
+		this.finishedRepos.addAll(finishedRepos);
 	}
 }

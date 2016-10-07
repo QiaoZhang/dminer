@@ -3,7 +3,6 @@ package com.eptd.dminer.crawler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
@@ -25,28 +24,30 @@ import com.google.gson.JsonObject;
 
 public class UserProcessor {
 	private ProjectLogger logger;
+	private ForkJoinPool pool;
 	
 	private String userURL;
 	private Authorization auth;
 	private String folderPath;
 	
 	private User user;
-	private JsonArray preRepos;
 	
 	private int MAXREPOS;
 	private String MAJORLANGUAGE;
 	
-	public UserProcessor(String userURL,Authorization auth,String filePath,ProjectLogger logger){
+	public UserProcessor(String userURL,Authorization auth,String filePath,ProjectLogger logger,ForkJoinPool pool){
 		this.auth = auth;
 		this.userURL = userURL;		
 		this.folderPath = filePath + "\\" + "eptd-contributors";
 		this.user = new User(userURL);
 		this.logger = new ProjectLogger(logger).append("UserProcessor");
 		//no pre-processed user repo info
-		this.preRepos = null;
 		this.Config(logger.getConfig());
+		//fork join pool
+		this.pool = pool;
 	}
 	
+	@Deprecated
 	public UserProcessor(String userURL,JsonArray preRepos,Authorization auth,String filePath,ProjectLogger logger){
 		this.auth = auth;
 		this.userURL = userURL;		
@@ -54,7 +55,6 @@ public class UserProcessor {
 		this.user = new User(userURL);
 		this.logger = new ProjectLogger(logger).append("UserProcessor");
 		//pre-processed user repo info
-		this.preRepos = preRepos;
 		this.Config(logger.getConfig());
 	}
 	
@@ -66,33 +66,35 @@ public class UserProcessor {
 	public boolean process(){
 		try {
 			//step 1: get json data of a user
-			final JsonElement jsonUser = new GitHubAPIClient(auth,logger).get(userURL);			
+			JsonElement jsonUser = new GitHubAPIClient(auth,logger).get(userURL);			
 			if(jsonUser.isJsonObject()&&jsonUser.getAsJsonObject().get("html_url")!=null){
-				ForkJoinPool pool = new ForkJoinPool(2);
 				//step 2: extract basic info and initialized repo
-				extractBasicInfo(jsonUser.getAsJsonObject());
-				//step 3: process owned repositories with RepositoryProcessor
-				pool.submit(()->extractOwnReposInfo());
-				//step 4: process contributed repositories with search API
-				pool.submit(()->extractContributedReposInfo());
-				pool.awaitQuiescence(120, TimeUnit.MINUTES);		
-				user.setAvgReposData();
+				if(pool.submit(()->extractBasicInfo(jsonUser.getAsJsonObject())).get()){
+					//step 3: process contributed repositories with search API
+					pool.submit(()->extractContributedReposInfo());	
+					//step 4: process owned repositories with RepositoryProcessor
+					if(pool.submit(()->extractOwnReposInfo()).get())
+						user.setAvgReposData();//set the average data for user's analyzed repos
+				}
+				//clean up
 				ProjectCleaner.getInstance().deleteFolder(folderPath);
 				return true;
 			}else{
 				logger.error("Captured data of url "+userURL+" is not valid.");
-				System.out.println(jsonUser.toString());
+				logger.error(jsonUser.toString());
+				//clean up
 				ProjectCleaner.getInstance().deleteFolder(folderPath);
 				return false;
 			}			
 		} catch (Exception e) {
 			logger.error("Unknown Exception when processing "+userURL,e);
+			//clean up
 			ProjectCleaner.getInstance().deleteFolder(folderPath);
 			return false;
 		}	
 	}
 	
-	private void extractBasicInfo(JsonObject jsonUser){
+	private boolean extractBasicInfo(JsonObject jsonUser){
 		user.setUserHTML(jsonUser.get("html_url").getAsString());
 		user.setUserId(jsonUser.get("id").getAsLong());
 		user.setLogin(jsonUser.get("login").getAsString());
@@ -121,33 +123,30 @@ public class UserProcessor {
 		//set new folder path
 		this.folderPath += "\\"+user.getLogin()+"-"+user.getUserId();
 		user.setFolderPath(this.folderPath);
+		return true;
 	}
 	
-	private void extractOwnReposInfo() {
-		JsonElement response;
-		//if user's repos has already searched
-		if(preRepos!=null){
-			response = preRepos;
-		}else {
-			SearchQueryGenerator generator = new SearchQueryGenerator("repo")
-					.addSearchTerm("user", user.getLogin())
-					.addSearchTerm("language", MAJORLANGUAGE);//MAJORLANGUAGE
-			GitHubAPIClient client = new GitHubAPIClient(auth,logger)
-					.addParameter("q", generator.getSearchStr())
-					.addParameter("sort", "forks");
-			client.setMaxPage((int)Math.ceil((double)MAXREPOS/(double)client.getMaxPerPage()));//MAXREPOS
-			response = client.get(generator.getQueryBase());
-		}
+	private boolean extractOwnReposInfo() {
+		SearchQueryGenerator generator = new SearchQueryGenerator("repo")
+				.addSearchTerm("user", user.getLogin())
+				.addSearchTerm("language", MAJORLANGUAGE);//MAJORLANGUAGE
+		GitHubAPIClient client = new GitHubAPIClient(auth,logger)
+				.addParameter("q", generator.getSearchStr())
+				.addParameter("sort", "forks");
+		client.setMaxPage((int)Math.ceil((double)MAXREPOS/(double)client.getMaxPerPage()));//MAXREPOS
+		JsonElement response = client.get(generator.getQueryBase());
 		//process repos in parallel
 		if(response.isJsonArray()){
 			if(response.getAsJsonArray().size()>0){
 				List<JsonObject> repos = IntStream.rangeClosed(0, response.getAsJsonArray().size()-1)
+						.limit(response.getAsJsonArray().size())
 						.mapToObj(i->response.getAsJsonArray().get(i).getAsJsonObject())
 						.filter(i->!i.get("url").getAsString().equals(logger.getRepoURL()))
 						.collect(Collectors.toList());
+				//initialize parallel processing
 				AtomicReference<User> atomicUser = new AtomicReference<User>(this.getUser());
 				repos.parallelStream().limit(MAXREPOS).map(repo -> {
-					RepositoryProcessor processor = new RepositoryProcessor(repo.get("url").getAsString(),auth,this.folderPath,logger);
+					RepositoryProcessor processor = new RepositoryProcessor(repo.get("url").getAsString(),auth,this.folderPath,logger,pool);
 					if(processor.process()){
 						if(processor.getRepo().getSonarMetrics().size()>0){
 							atomicUser.get().addOwnRepo(processor.getRepo());
@@ -160,8 +159,11 @@ public class UserProcessor {
 				.filter(repo->repo!=null)
 				.count();
 			}
-		}else
+			return true;
+		}else{
 			logger.error("Search results of "+user.getLogin()+"'s repos is not valid.");
+			return false;
+		}
 	}
 	
 	private void extractContributedReposInfo() {		
@@ -189,7 +191,7 @@ public class UserProcessor {
 				int[] init = {0,0,0,0,0};
 				AtomicIntegerArray totals = new AtomicIntegerArray(init);
 				List<DateTime> closedDates = new ArrayList<DateTime>();
-				Long numOfContributedRepos = issues.parallelStream().map(issue -> {
+				Long numOfContributedRepos = issues.stream().map(issue -> {
 					JsonElement pull = new GitHubAPIClient(auth,logger).get(issue.get("pull_request").getAsJsonObject().get("url").getAsString());
 					if(pull.isJsonObject()&&!pull.getAsJsonObject().get("closed_at").isJsonNull()){
 						totals.incrementAndGet(0);// numOfAcceptedPR
@@ -214,7 +216,7 @@ public class UserProcessor {
 					//Set average date interval
 					AtomicLong totalPRInterval = new AtomicLong(0);
 					AtomicReference<DateTime> lastDate = new AtomicReference<DateTime>();
-					closedDates.parallelStream().sorted().collect(Collectors.toList()).forEach(date->{
+					closedDates.stream().sorted().collect(Collectors.toList()).forEach(date->{
 						if(lastDate.get() != null){
 							totalPRInterval.addAndGet(Math.abs(Days.daysBetween(lastDate.getAndSet(date).toLocalDate(),date.toLocalDate()).getDays()));
 						}else

@@ -84,13 +84,15 @@ public class GitHubAPIClient {
 			do{
 				HttpResponse response = request(url+setParameter()+setPaging(page,maxPerPage));
 				if(!Optional.ofNullable(response).isPresent()) break;
-				if(Optional.ofNullable(response.getFirstHeader("X-RateLimit-Remaining")).isPresent()
-						&&Integer.valueOf(response.getFirstHeader("X-RateLimit-Remaining").getValue())==0){
-					//make current thread sleep if the rate limit of GitHub API has reached
-					long sleep = Long.valueOf(response.getFirstHeader("X-RateLimit-Reset").getValue())+2-(new DateTime().getMillis()/1000);
-					System.out.println("Due to the rate limit, thread gonna sleep "+sleep+" seconds.");
-					Thread.sleep(sleep*1000);
-					response = request(url+setParameter()+setPaging(page,maxPerPage));
+				if(Optional.ofNullable(response.getFirstHeader("X-RateLimit-Remaining")).isPresent()){
+					System.out.println("GitHub Request Remaining: "+response.getFirstHeader("X-RateLimit-Remaining").getValue()+" When processing "+url);
+					if(Integer.valueOf(response.getFirstHeader("X-RateLimit-Remaining").getValue())==0){
+						//make current thread sleep if the rate limit of GitHub API has reached
+						long sleep = Long.valueOf(response.getFirstHeader("X-RateLimit-Reset").getValue())+2-(new DateTime().getMillis()/1000);
+						System.out.println("Due to the rate limit, thread gonna sleep "+sleep+" seconds.");
+						Thread.sleep(sleep*1000);
+						response = request(url+setParameter()+setPaging(page,maxPerPage));
+					}
 				}
 				if(maxPage==0&&response.getFirstHeader("Link") != null)
 					maxPage = getLastPage(response.getFirstHeader("Link").getValue());
@@ -117,7 +119,9 @@ public class GitHubAPIClient {
 		do {
 			try{
 				if(count>0)
-					Thread.sleep(REQUESTSLEEP * 1000);//REQUESTSLEEP: repeat HTTP request every X seconds 
+					Thread.sleep(REQUESTSLEEP * 1000);//REQUESTSLEEP: repeat HTTP request every X seconds
+				else
+					Thread.sleep(200);
 				HttpClient httpClient = HttpClientBuilder.create().build();
 				HttpGet request = new HttpGet(url);
 				if(auth!=null)

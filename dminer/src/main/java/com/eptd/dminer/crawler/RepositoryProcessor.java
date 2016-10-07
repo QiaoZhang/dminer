@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -23,7 +21,8 @@ import com.eptd.dminer.processor.SonarPropertiesWriter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class RepositoryProcessor {	
+public class RepositoryProcessor {
+	private ForkJoinPool pool;
 	protected ProjectLogger logger;
 	protected String repositoryURL;
 	protected Authorization auth;
@@ -45,7 +44,18 @@ public class RepositoryProcessor {
 		this.repositoryURL = repositoryURL;
 		this.filePath = filePath;		
 		this.repo = new Repository();
-	}	
+		this.pool = new ForkJoinPool(3);
+	}
+	
+	public RepositoryProcessor(String repositoryURL, Authorization auth, String filePath,ProjectLogger logger,ForkJoinPool pool){
+		if(logger != null)
+			this.logger = new ProjectLogger(logger).append("RepositoryProcessor");
+		this.auth = auth;
+		this.repositoryURL = repositoryURL;
+		this.filePath = filePath;		
+		this.repo = new Repository();
+		this.pool = pool;
+	}
 	
 	protected void updateMajorRepo(MajorRepository repo, ProjectLogger logger){
 		this.repo = repo;
@@ -57,27 +67,26 @@ public class RepositoryProcessor {
 			//step 1: get json data of a repo
 			final JsonElement jsonRepo = new GitHubAPIClient(auth,logger).get(repositoryURL);
 			if(jsonRepo.isJsonObject()&&jsonRepo.getAsJsonObject().get("url")!=null){
-				ForkJoinPool pool = new ForkJoinPool(2);
 				//step 2: extract basic info and initialized repo
-				extractBasicInfo(jsonRepo.getAsJsonObject());
-				//step 3: extract extra attributes
-				pool.submit(()->extractAttributes(jsonRepo.getAsJsonObject()));	
-				//step 4: conduct SonarQube analysis
-				SonarAnalysisProcessor sonarProcessor = new SonarAnalysisProcessor(
-					repo.getRepositoryHTML(),filePath,repo.getProjectID(),
-		    		repo.getProjectName(),repo.getOwnerLogin(),repo.getUserType(),
-		    		repo.getLanguage(),repo.getVersion(),logger);
-				AtomicReference<ArrayList<SonarMetrics>> result = new AtomicReference<ArrayList<SonarMetrics>>(null);
-				pool.submit(()->{
-					result.set(sonarProcessor.process());					
-				});
-				pool.awaitQuiescence(60, TimeUnit.MINUTES);
-				ProjectCleaner.getInstance().deleteSonar(sonarProcessor.getProjectKey());
-				if(result.get()!=null)
-					repo.setSonarMetrics(result.get());
-				else
+				if(pool.submit(()->extractBasicInfo(jsonRepo.getAsJsonObject())).get()){
+					//step 3: extract extra attributes
+					pool.submit(()->extractAttributes(jsonRepo.getAsJsonObject()));	
+					//step 4: conduct SonarQube analysis
+					SonarAnalysisProcessor sonarProcessor = new SonarAnalysisProcessor(
+						repo.getRepositoryHTML(),filePath,repo.getProjectID(),
+			    		repo.getProjectName(),repo.getOwnerLogin(),repo.getUserType(),
+			    		repo.getLanguage(),repo.getVersion(),logger);
+					ArrayList<SonarMetrics> result = pool.submit(()->sonarProcessor.process()).get();
+					//clean up first
+					ProjectCleaner.getInstance().deleteSonar(sonarProcessor.getProjectKey());
+					//set sonar results
+					if(result!=null){
+						repo.setSonarMetrics(result);
+						return true;
+					}else
+						return false;
+				}else
 					return false;
-				return true;	
 			}else{
 				logger.error("Captured data of url "+repositoryURL+" is not valid.");
 				return false;
@@ -89,25 +98,31 @@ public class RepositoryProcessor {
 		}		
 	}
 	
-	private void extractBasicInfo(JsonObject jsonRepo){
-		repo.setRepositoryURL(this.repositoryURL);
-		repo.setRepositoryHTML(jsonRepo.get("html_url").getAsString());		
-		repo.setProjectID(jsonRepo.get("id").getAsLong());
-		repo.setProjectName(jsonRepo.get("name").getAsString());
-		repo.setOwnerLogin(jsonRepo.get("owner").getAsJsonObject().get("login").getAsString());
-		repo.setUserType(jsonRepo.get("owner").getAsJsonObject().get("type").getAsString().toLowerCase());
-		repo.setLanguage(jsonRepo.get("language").getAsString().toLowerCase());
-		//set new file path
-		this.filePath += "\\"+repo.getProjectName()+"-"+repo.getProjectID();
-		repo.setFilePath(this.filePath);
-		
-		//get the latest tag name
-		JsonElement tags = new GitHubAPIClient(auth,logger).get(jsonRepo.get("tags_url").getAsString());
-		if(tags.isJsonArray()&&tags.getAsJsonArray().size()>0
-				&&!tags.getAsJsonArray().get(0).getAsJsonObject().get("name").isJsonNull())
-			repo.setVersion(tags.getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString());
-		else
-			repo.setVersion("1.0.0");
+	private boolean extractBasicInfo(JsonObject jsonRepo){
+		try{
+			repo.setRepositoryURL(this.repositoryURL);
+			repo.setRepositoryHTML(jsonRepo.get("html_url").getAsString());		
+			repo.setProjectID(jsonRepo.get("id").getAsLong());
+			repo.setProjectName(jsonRepo.get("name").getAsString());
+			repo.setOwnerLogin(jsonRepo.get("owner").getAsJsonObject().get("login").getAsString());
+			repo.setUserType(jsonRepo.get("owner").getAsJsonObject().get("type").getAsString().toLowerCase());
+			repo.setLanguage(jsonRepo.get("language").getAsString().toLowerCase());
+			//set new file path
+			this.filePath += "\\"+repo.getProjectName()+"-"+repo.getProjectID();
+			repo.setFilePath(this.filePath);
+			
+			//get the latest tag name
+			JsonElement tags = new GitHubAPIClient(auth,logger).get(jsonRepo.get("tags_url").getAsString());
+			if(tags.isJsonArray()&&tags.getAsJsonArray().size()>0
+					&&!tags.getAsJsonArray().get(0).getAsJsonObject().get("name").isJsonNull())
+				repo.setVersion(tags.getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString());
+			else
+				repo.setVersion("1.0.0");
+			return true;
+		}catch(Exception e){
+			logger.error("Unknown Exception when extracting basic info of "+repositoryURL,e);
+			return false;
+		}		
 	}
 	
 	private void extractAttributes(JsonObject jsonRepo){
@@ -124,7 +139,7 @@ public class RepositoryProcessor {
 				List<JsonObject> issues = IntStream.rangeClosed(0, response.getAsJsonArray().size()-1)
 												.mapToObj(i->response.getAsJsonArray().get(i).getAsJsonObject())
 												.collect(Collectors.toList());
-				List<Double> dateDistance = issues.parallelStream().map(issue -> {
+				List<Double> dateDistance = issues.stream().map(issue -> {
 					DateTime start = new DateTime(issue.get("created_at").getAsString());
 					JsonElement events = new GitHubAPIClient(auth,logger).get(issue.get("events_url").getAsString());
 					if(events.isJsonArray()&&events.getAsJsonArray().size()>0)

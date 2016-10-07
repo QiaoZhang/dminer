@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class CMDProcessor {
 	private Process p;
@@ -27,7 +28,7 @@ public class CMDProcessor {
 	 * @throws InterruptedException If process is interrupted accidentally
 	 * @return 0 if command prompt is closed normally; -1 if command execution is interrupted accidentally.
 	 */
-	public int execute() throws InterruptedException, IOException{
+	public boolean execute() throws InterruptedException, IOException{
 		//initialize
 		p = Runtime.getRuntime().exec(CMD);
 		stdin = new PrintWriter(p.getOutputStream());
@@ -40,7 +41,7 @@ public class CMDProcessor {
 				stdin.println(commands.get(i));		
 		commands.clear();
 		stdin.close();
-		return p.waitFor();
+		return p.waitFor(10, TimeUnit.MINUTES);
 	}
 
 	private void syncPipe(InputStream istrm,OutputStream ostrm){

@@ -60,13 +60,13 @@ public class SonarAnalysisProcessor {
 			CMDProcessor cmd = new CMDProcessor();
 			//step 1: clone repository
 			cmd.addCommand("git clone "+ repositoryHTML + " " + filePath);
-			if(cmd.execute() != 0)
+			if(!cmd.execute())
 				throw new Exception("Project "+projectName+" fails to be cloned to local drive");
 			//step 2: write properties file			
 			if(!SonarPropertiesWriter.getInstance().write(logger,projectID,projectName,login,userType,language,version,filePath))
 				throw new Exception("Project properties file of "+projectName+" fails to be created");
 			//step 3: run SonarQube analysis
-			if(!SonarRunnerProcessor.getInstance().execute(filePath))
+			if(!SonarRunnerProcessor.getInstance().execute(filePath,cmd))
 				throw new Exception("Project "+projectName+" fails to be analyzed by SonarQube");
 			return SonarResultExtractor.getInstance().extract(logger, projectKey, sonarMetrics);
 		} catch (Exception e) {
