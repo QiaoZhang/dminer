@@ -106,7 +106,8 @@ public class RepositoryProcessor {
 			repo.setProjectName(jsonRepo.get("name").getAsString());
 			repo.setOwnerLogin(jsonRepo.get("owner").getAsJsonObject().get("login").getAsString());
 			repo.setUserType(jsonRepo.get("owner").getAsJsonObject().get("type").getAsString().toLowerCase());
-			repo.setLanguage(jsonRepo.get("language").getAsString().toLowerCase());
+			if(jsonRepo.get("language")!=null&&!jsonRepo.get("language").isJsonNull())
+				repo.setLanguage(jsonRepo.get("language").getAsString().toLowerCase());
 			//set new file path
 			this.filePath += "\\"+repo.getProjectName()+"-"+repo.getProjectID();
 			repo.setFilePath(this.filePath);

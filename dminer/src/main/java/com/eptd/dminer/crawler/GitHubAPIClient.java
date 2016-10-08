@@ -81,26 +81,48 @@ public class GitHubAPIClient {
 		JsonElement jsonElement = new JsonObject();
 		JsonArray jsonArray = new JsonArray();	
 		try {
-			do{
-				HttpResponse response = request(url+setParameter()+setPaging(page,maxPerPage));
-				if(!Optional.ofNullable(response).isPresent()) break;
-				if(Optional.ofNullable(response.getFirstHeader("X-RateLimit-Remaining")).isPresent()){
-					System.out.println("GitHub Request Remaining: "+response.getFirstHeader("X-RateLimit-Remaining").getValue()+" When processing "+url);
-					if(Integer.valueOf(response.getFirstHeader("X-RateLimit-Remaining").getValue())==0){
-						//make current thread sleep if the rate limit of GitHub API has reached
-						long sleep = Long.valueOf(response.getFirstHeader("X-RateLimit-Reset").getValue())+2-(new DateTime().getMillis()/1000);
-						System.out.println("Due to the rate limit, thread gonna sleep "+sleep+" seconds.");
-						Thread.sleep(sleep*1000);
-						response = request(url+setParameter()+setPaging(page,maxPerPage));
+			do{				
+				//check if the request triggers an abuse detection mechanism
+				boolean abuse;
+				HttpResponse response;
+				do{
+					abuse = false;//abuse detection mechanism flag
+					response = request(url+setParameter()+setPaging(page,maxPerPage));
+					if(!Optional.ofNullable(response).isPresent()) break;
+					if(Optional.ofNullable(response.getFirstHeader("X-RateLimit-Remaining")).isPresent()){
+						System.out.println("GitHub Request Remaining: "+response.getFirstHeader("X-RateLimit-Remaining").getValue()+" When processing "+url);
+						if(Integer.valueOf(response.getFirstHeader("X-RateLimit-Remaining").getValue())==0){
+							//make current thread sleep if the rate limit of GitHub API has reached
+							long sleep = Long.valueOf(response.getFirstHeader("X-RateLimit-Reset").getValue())+2-(new DateTime().getMillis()/1000);
+							System.out.println("Due to the rate limit, thread gonna sleep "+sleep+" seconds.");
+							Thread.sleep(sleep*1000);
+							abuse = true;
+							continue;
+						}
 					}
-				}
-				if(maxPage==0&&response.getFirstHeader("Link") != null)
-					maxPage = getLastPage(response.getFirstHeader("Link").getValue());
-				jsonElement = new JsonParser().parse(IOUtils.toString(response.getEntity().getContent(),encoding));
-				if(jsonElement.isJsonObject()){
+					
+					if(maxPage==0&&response.getFirstHeader("Link") != null)
+						maxPage = getLastPage(response.getFirstHeader("Link").getValue());					
+					
+					jsonElement = new JsonParser().parse(IOUtils.toString(response.getEntity().getContent(),encoding));
+					//triggered an abuse detection mechanism
+					if(jsonElement.getAsJsonObject().get("documentation_url")!=null
+							&&!jsonElement.getAsJsonObject().get("documentation_url").isJsonNull()
+							&&jsonElement.getAsJsonObject().get("documentation_url").getAsString().equals("https://developer.github.com/v3/#abuse-rate-limits")
+							&&jsonElement.getAsJsonObject().get("message").getAsString().equals("You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.")){
+						//sleep a few minutes
+						int ABUSESLEEP = 5;
+						System.out.println("Due to the abuse detection mechanism, thread gonna sleep "+ABUSESLEEP+" minutes.");
+						Thread.sleep(ABUSESLEEP*60*1000);//TODO ABUSESLEEP
+						abuse = true;
+						continue;
+					}
+				}while(abuse);
+				//there is no problem on getting the correct response
+				if(jsonElement.isJsonObject()&&!jsonElement.getAsJsonObject().isJsonNull()){
 					if(url.contains("/search/")&&Optional.ofNullable(jsonElement.getAsJsonObject().get("items")).isPresent())
 						jsonArray.addAll(jsonElement.getAsJsonObject().get("items").getAsJsonArray());
-				}else if(jsonElement.isJsonArray())
+				}else if(jsonElement.isJsonArray()&&!jsonElement.getAsJsonArray().isJsonNull())
 					jsonArray.addAll(jsonElement.getAsJsonArray());
 				page++;
 			}while(page <= maxPage);
