@@ -106,7 +106,8 @@ public class GitHubAPIClient {
 					
 					jsonElement = new JsonParser().parse(IOUtils.toString(response.getEntity().getContent(),encoding));
 					//triggered an abuse detection mechanism
-					if(jsonElement.getAsJsonObject().get("documentation_url")!=null
+					if(jsonElement!=null&&jsonElement.isJsonObject()&&!jsonElement.isJsonNull()
+							&&jsonElement.getAsJsonObject().get("documentation_url")!=null
 							&&!jsonElement.getAsJsonObject().get("documentation_url").isJsonNull()
 							&&jsonElement.getAsJsonObject().get("documentation_url").getAsString().equals("https://developer.github.com/v3/#abuse-rate-limits")
 							&&jsonElement.getAsJsonObject().get("message").getAsString().equals("You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.")){
